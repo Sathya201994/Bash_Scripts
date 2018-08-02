@@ -1,0 +1,5 @@
+url=$(cat /usr/local/apache2/conf/httpd.conf | grep -i servername | awk '{print $2}');url2=($url);for i in "${url2[@]}"
+do
+echo "URL : "$i
+nslookup $i | tail -2
+done
