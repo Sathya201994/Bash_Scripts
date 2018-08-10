@@ -1,0 +1,174 @@
+#!/bin/bash
+
+echo -n "Enter the Username: "
+read user_name
+
+echo -n "Enter the IP address: "
+read ip_address
+
+ssh $user_name@$ip_address -t << EOF > /tmp/output.txt
+
+echo -e "\e[1;4mBold and Underlined"
+
+echo -e "You logged in as $user_name user"
+
+echo ""
+
+echo "The Parameters of the Remote Server are:"
+
+total_ram=\$(free -g | head -2 | tail -1 | awk '{print \$2}')
+
+if [ \$total_ram -ge 8 ] ; then
+
+echo "The Total RAM in the server is greater than or equal to 8GB"
+
+else
+
+echo "The total RAM is lesser than 8GB"
+
+fi
+
+total_cpu=\$(cat /proc/cpuinfo | grep -ic processor)
+
+if [ \$total_cpu -ge 2 ] ; then
+
+echo "The Total Number of CPUs in the server is greater than or equal to 2"
+
+else
+
+echo "The Total Number of CPUs is lesser than 2"
+
+fi
+
+opt_size=\$(df -h | awk '/opt/' | awk '{print \$1}' | tr -d -c 0-9)
+
+if [ \$opt_size -ge 10 ] ; then
+
+echo "The /opt size in the server is greater than or equal to 10GB"
+
+else
+
+echo "The /opt size is lesser than 10GB"
+
+fi
+
+var_size=\$(df -h | awk '/var/ && !/www/' | awk '{print \$1}' | tr -d -c 0-9)
+
+if [ \$var_size -ge 10 ] ; then
+
+echo "The /var size in the server is greater than or equal to 10GB"
+
+else
+
+echo "The /var size is lesser than 10GB"
+
+fi
+
+usr_size=\$(df -h | awk '/usr/' | awk '{print \$1}' | tr -d -c 0-9)
+
+if [ \$usr_size -ge 10 ] ; then
+
+echo "The /usr size in the server is greater than or equal to 10GB"
+
+else
+
+echo "The /usr size is lesser than 10GB"
+
+fi
+
+echo ""
+
+echo "NFS(/var/www) Status:"
+
+if  mount -l -t nfs | grep /var/www >> /dev/null ; then
+
+echo "NFS(/var/www) exists in the server"
+
+nfs_size=\$(df -h | grep /var/www | awk '{print \$1}' | tr -d -c 0-9)
+
+if [ \$nfs_size -ge 50 ] ; then
+
+echo "The NFS size in the server is greater than or equal to 50GB"
+
+else
+
+echo "The NFS size is lesser than 50GB"
+
+fi
+
+echo ""
+
+else
+
+echo "NFS(/var/www) does not exist in the server"
+
+fi
+
+echo "Mail Service Status:"
+
+mail_service=\$(command -v mutt mail mailx sendmail ssmtp 2>/dev/null | xargs)
+
+echo "\$mail_service : are the mail services running in the server"
+
+echo ""
+
+exit
+
+EOF
+
+echo "Retrieved all the info from the Remote Server."
+
+echo "Enter the password once again for Retrieving Sudo info from the Remote Server.."
+
+ssh $user_name@$ip_address -t 'sudo cat /etc/sudoers' | if grep -qi $user_name ; then
+
+echo "Sudo status:" >> /tmp/output.txt
+
+echo "$user_name has Sudo access" >> /tmp/output.txt
+
+else
+
+echo "Sudo status:" >> /tmp/output.txt
+
+echo "$user_name dont have Sudo access" >> /tmp/output.txt
+
+fi
+
+cat /tmp/output.txt
+
+-------------------------------------------------------------------------------------------------------------------
+
+OUTPUT:
+
+[olyconnect@100 tmp]$ ./sathya.sh
+Enter the Username: openplatform
+Enter the IP address: 3.3.87.23
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+openplatform@3.3.87.23's password:
+Retrieved all the info from the Remote Server.
+Enter the password once again for Retrieving Sudo info from the Remote Server..
+openplatform@3.3.87.23's password:
+Connection to 3.3.87.23 closed.
+You logged in as        openplatform user
+
+The Parameters of the Remote Server are:
+The total RAM is lesser than 8GB
+The Total Number of CPUs in the server is greater than or equal to 2
+The /opt size in the server is greater than or equal to 10GB
+The /var size in the server is greater than or equal to 10GB
+The /usr size in the server is greater than or equal to 10GB
+
+NFS(/var/www) Status:
+NFS(/var/www) exists in the server
+The NFS size in the server is greater than or equal to 50GB
+
+Mail Service Status:
+/bin/mail /bin/mailx /usr/sbin/sendmail : are the mail services running in the server
+
+Sudo status:
+openplatform has Sudo access
+
+
+
+
+============================================================================================================
